@@ -24,6 +24,9 @@ type Synapse struct {
 	Effwt     float32 `desc:"Maybe it is needed. I don't know yet. Default to be the same as Wt."`
 	SenRecAct float32 `desc:"#READ_ONLY rescaling factor taking into account sd_ca_gain and sd_ca_thr (= sd_ca_gain/(1 - sd_ca_thr))"`
 	SynDepFac float32 `desc:"#READ_ONLY Final Calcualted Synaptic Depression at the Synapse"`
+	ActPAvg	  float32 `desc:"#READ_ONLY Final ActP at the Synapse"`
+	ActMAvg   float32 `desc:"#READ_ONLY Final ActQ at the Synapse"`
+	RunSum 	  float32 `desc:"#READ_ONLY Running Sum of coactivation"`
 	//su_act    float32 `desc:"#READ_ONLY rescaling factor taking into account sd_ca_gain and sd_ca_thr (= sd_ca_gain/(1 - sd_ca_thr))"`
 	//ru_act    float32 `desc:"#READ_ONLY rescaling factor taking into account sd_ca_gain and sd_ca_thr (= sd_ca_gain/(1 - sd_ca_thr))"`
 	//Rec            float32 `desc:"// #DEF_0.002 rate of recovery from depression"`
@@ -35,7 +38,7 @@ type Synapse struct {
 	Sleep          float32 `desc:"#READ_ONLY rescaling factor taking into account sd_ca_gain and sd_ca_thr (= sd_ca_gain/(1 - sd_ca_thr))"`
 }
 
-var SynapseVars = []string{"Wt", "LWt", "DWt", "Norm", "Moment", "Scale", "SRAvgDp", "Cai", "Effwt", "SenRecAct", "SynDepFac"} //, "su_act", "ru_act"} //, "CaInc", "CaDec", "SdCaThr", "SdCaGain", "SdCaThrRescale"}
+var SynapseVars = []string{"Wt", "LWt", "DWt", "Norm", "Moment", "Scale", "SRAvgDp", "Cai", "Effwt", "SenRecAct", "SynDepFac", "ActPAvg", "ActMAvg"} //, "su_act", "ru_act"} //, "CaInc", "CaDec", "SdCaThr", "SdCaGain", "SdCaThrRescale"}
 
 var SynapseVarProps = map[string]string{
 	"DWt":    `auto-scale:"+"`,
@@ -120,6 +123,27 @@ func (sy *Synapse) CaUpdt(ru_act float32, su_act float32) {
 	//}
 	drive := (ru_act * su_act) * sy.Effwt
 	sy.Cai += (sy.CaInc * (1.0 - sy.Cai) * drive) - (sy.CaDec * sy.Cai)
+}
+
+func (sy *Synapse) RunSumUpdt(init bool, ru_act float32, su_act float32, ) {
+	if sy.Sleep == 1 { // adding extra check just in case
+		if init {
+			sy.RunSum = 0
+			sy.RunSum = (ru_act * su_act)
+		} else {
+			sy.RunSum = sy.RunSum + (ru_act * su_act)
+		}
+	}
+}
+
+// CalcActP calculates final ActP values for each synapse
+func (sy *Synapse) CalcActP(pluscount int) {
+	sy.ActPAvg = sy.RunSum / float32(pluscount)
+}
+
+// CalcActQ calculates final ActQ values for each synapse
+func (sy *Synapse) CalcActM(minuscount int) {
+	sy.ActMAvg = sy.RunSum / float32(minuscount)
 }
 
 func (sy *Synapse) EffwtUpdt() {

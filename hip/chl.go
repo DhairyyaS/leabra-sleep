@@ -6,7 +6,7 @@ package hip
 
 import (
 	"github.com/chewxy/math32"
-	"github.com/emer/leabra/leabra"
+	"github.com/dhairyyas/leabra-sleep/leabra"
 )
 
 // Contrastive Hebbian Learning (CHL) parameters
