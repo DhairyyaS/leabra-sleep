@@ -603,6 +603,8 @@ func (ly *Layer) RunSumUpdt(init bool) {
 	}
 }
 
+
+
 //CalcActP calculates final ActP values for each synapse
 func (ly *Layer) CalcActP(pluscount int) {
 	for ni := range ly.Neurons {
@@ -647,6 +649,8 @@ func (ly *Layer) CalLaySim(ltime *Time) {
 
 	sim := stat.Correlation(PrevState, CurState, nil)
 
+	//fmt.Println(sim)
+
 	// DS: check if lay sim is nan (can happen if the layer act goes to 0 for whatever reason at a given cycle) and set
 	// lay sim to 0 for that cycle. This is important because emergent doesn't like nan values and the gui has issues with plotting slices with nans.
 	if math.IsNaN(sim) {
@@ -654,6 +658,8 @@ func (ly *Layer) CalLaySim(ltime *Time) {
 	} else {
 		ly.Sim = sim
 	}
+
+	//fmt.Println(ly.Sim, ly.Name())
 
 }
 
@@ -1069,7 +1075,7 @@ func (ly *Layer) SendGDelta(ltime *Time, sleep bool) {
 		if nrn.IsOff() {
 			continue
 		}
-		if sleep {
+		if sleep { // Non-sender-reciever delta algo
 			delta := nrn.Act
 			for _, sp := range ly.SndPrjns {
 				if sp.IsOff() {
@@ -1077,6 +1083,7 @@ func (ly *Layer) SendGDelta(ltime *Time, sleep bool) {
 				}
 				sp.(LeabraPrjn).SendGDelta(ni, delta, true)
 			}
+			nrn.ActSent = nrn.Act
 		}
 
 		if !sleep {

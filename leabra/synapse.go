@@ -25,7 +25,7 @@ type Synapse struct {
 	SenRecAct float32 `desc:"#READ_ONLY rescaling factor taking into account sd_ca_gain and sd_ca_thr (= sd_ca_gain/(1 - sd_ca_thr))"`
 	SynDepFac float32 `desc:"#READ_ONLY Final Calcualted Synaptic Depression at the Synapse"`
 	ActPAvg	  float32 `desc:"#READ_ONLY Final ActP at the Synapse"`
-	ActMAvg   float32 `desc:"#READ_ONLY Final ActQ at the Synapse"`
+	ActMAvg   float32 `desc:"#READ_ONLY Final ActM at the Synapse"`
 	RunSum 	  float32 `desc:"#READ_ONLY Running Sum of coactivation"`
 	//su_act    float32 `desc:"#READ_ONLY rescaling factor taking into account sd_ca_gain and sd_ca_thr (= sd_ca_gain/(1 - sd_ca_thr))"`
 	//ru_act    float32 `desc:"#READ_ONLY rescaling factor taking into account sd_ca_gain and sd_ca_thr (= sd_ca_gain/(1 - sd_ca_thr))"`
@@ -139,11 +139,13 @@ func (sy *Synapse) RunSumUpdt(init bool, ru_act float32, su_act float32, ) {
 // CalcActP calculates final ActP values for each synapse
 func (sy *Synapse) CalcActP(pluscount int) {
 	sy.ActPAvg = sy.RunSum / float32(pluscount)
+	sy.RunSum = 0
 }
 
 // CalcActQ calculates final ActQ values for each synapse
 func (sy *Synapse) CalcActM(minuscount int) {
 	sy.ActMAvg = sy.RunSum / float32(minuscount)
+	sy.RunSum = 0
 }
 
 func (sy *Synapse) EffwtUpdt() {
